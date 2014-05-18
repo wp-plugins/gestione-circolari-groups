@@ -2,8 +2,8 @@
 Contributors: Scimone Ignazio
 Tags: Gestione Circolari, Scuola, Gestione Scuola, Groups
 Requires at least: 3.7
-Tested up to: 3.9
-Stable tag: 1.0
+Tested up to: 3.9.1
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,12 @@ Di seguito sono riportati i passi necessari per l'installazione del plugin.
 8. Visualizzazione di una circolare
 
 == Changelog ==
+= 1.1 =
+- <strong>Sistemati</strong> vari bug di visaulizzazione di nel FrontEnd che nel BackEnd
+- <strong>Suddiviso</strong> L'elenco delle circolari in Firmate e da Firmare
+- <strong>Implementata</strong> la paginazione nelle liste delle circolari Firmate e da Firmare
+- <strong>Inserita</strong> nel BackEnd la visualizzazione dell'icona da Firmare da Esprimere adesione
+- <strong>Modificata</strong> BackEnd il sistema di Firma e di Espressione adesione, adesso dopo l'operazione si rimane nella circolare
 = 1.0 =
 - <strong>Prima versione</strong>
  == Upgrade Notice ==

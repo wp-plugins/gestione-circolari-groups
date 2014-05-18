@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:1.0
+Version:1.1
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -66,6 +66,12 @@ register_activation_hook( __FILE__,  'circolariG_activate');
 add_filter( 'the_content', 'circolariG_vis_firma');
 add_shortcode('VisCircolari', 'circolariG_Visualizza');
 add_action('wp_head', 'circolariG_Testata' );
+add_action( 'admin_enqueue_scripts',  'circolariG_Admin_Enqueue_Scripts' );
+
+function circolariG_Admin_Enqueue_Scripts( $hook_suffix ) {
+	wp_enqueue_script('jquery');
+	wp_enqueue_script( 'Circolari-admin', plugins_url('js/Circolari.js', __FILE__ ));
+}
 
 function circolariG_search_filter($query) {
 
@@ -127,7 +133,7 @@ function circolariG_vis_firma( $content ){
 				}
 				else{
 					if ($Adesione[0]=="Si"){			
-					$Campo_Firma='<form action="'.$BaseUrl.'"  method="get" style="display:inline;">
+					$Campo_Firma='<form action=""  method="get" style="display:inline;">
 						<input type="hidden" name="post_type" value="circolari" />
 						<input type="hidden" name="page" value="Firma" />
 						<input type="hidden" name="op" value="Adesione" />
@@ -138,7 +144,7 @@ function circolariG_vis_firma( $content ){
 						<input type="submit" name="inviaadesione" class="button inviaadesione" id="'.$PostID.'" value="Firma" rel="'.get_the_title($PostID).'"/>
 					</form>';
 					}else
-						$Campo_Firma='<a href="'.$BaseUrl.'?post_type=circolari&page=Firma&op=Firma&pid='.$PostID.'">Firma Circolare</a>';
+						$Campo_Firma='<a href="?op=Firma&pid='.$PostID.'">Firma Circolare</a>';
 				}
 				$dati_firma=gcg_get_Firma_Circolare($PostID);
 			}	
@@ -183,6 +189,8 @@ function circolariG_add_menu_bubble() {
 function circolariG_menu(){
    add_submenu_page( 'edit.php?post_type=circolari', 'Parametri',  'Parametri', 'manage_options', 'circolari', 'circolariG_MenuPagine');
    $pageFirma=add_submenu_page( 'edit.php?post_type=circolari', 'Firma',  'Firma', 'read', 'Firma', 'circolariG_GestioneFirme');
+   add_action( 'admin_head-'. $pageFirma, 'circolariG_Testata' );
+   $pageFirmate=add_submenu_page( 'edit.php?post_type=circolari', 'Firmate',  'Firmate', 'read', 'Firmate', 'circolariG_VisualizzaFirmate');
    add_action( 'admin_head-'. $pageFirma, 'circolariG_Testata' );
 }
 
@@ -439,8 +447,7 @@ function circolariG_crea_custom_post_type() {
    'menu_position' => 5,
    'capability_type' => 'post',
    'hierarchical' => false,
-   'has_archive' => true,
-   
+   'has_archive' => true,  
    'menu_icon' => plugins_url( 'img/circolare.png', __FILE__ ),
 //   'taxonomies' => array('category'),  
    'supports' => array('title', 'editor', 'author','excerpt')));
@@ -603,7 +610,7 @@ $circolare=get_post($post_id);
 // Inizio interfaccia
 echo' 
 <div class="wrap">
-	      <img src="'.Circolari_URL.'/img/atti32.png" alt="Icona Atti" style="display:inline;float:left;margin-top:10px;"/>
+	      <img src="'.Circolari_URL.'/img/firma24.png" alt="Icona Atti" style="display:inline;float:left;margin-top:10px;"/>
 		  
 <h2 style="margin-left:40px;">Circolare n°'.$numero[0].'/'.$anno[0].'<br /><strong>'.$circolare->post_title.'</strong></h2>
 <div id="col-container">
@@ -627,14 +634,14 @@ if ($Tipo==1)
 else	
 	$sottrai=0;
 echo '
-<div style="width:90%;margin-top:20px;">
+<div style="width:100%;margin-top:20px;">
 	<table class="widefat">
 		<caption>Elenco Firme</caption>
 		<thead>
 			<tr>
-				<th style="width:'.(20-$sottrai).'%;">User login</th>
-				<th style="width:'.(30-$sottrai).'%;">Cognome</th>
-				<th style="width:'.(15-$sottrai).'%;">Gruppo</th>
+				<th style="width:'.(15-$sottrai).'%;">User login</th>
+				<th style="width:'.(30-$sottrai).'%;">Nome visualizzato</th>
+				<th style="width:'.(20-$sottrai).'%;">Gruppo</th>
 				<th style="width:'.(15-$sottrai).'%;">Data Firma</th>';
 if ($Tipo==1)
 	echo '
@@ -645,15 +652,14 @@ echo '
 		</thead>
 		<tboby>';
 foreach($utenti as $utente){
-	$GruppoUtente=get_user_meta($utente->ID, "gruppo", true);
-	$firma=gcg_get_Firma_Circolare($post_id,$utente->ID);
-	$gruppiutenti=get_terms('gruppiutenti', array('hide_empty' => 0,'include'=>$GruppoUtente));
-	$gruppiutenti=gcg_get_Circolari_Gruppi();
+	$user=get_user_by("id",$utente);
+	$firma=gcg_get_Firma_Circolare($post_id,$user->ID);
+	$gruppiutente=gcg_get_Gruppi_Utente($user->ID);
 	echo '
 				<tr>
-					<td>'.$utente->user_login.'</td>
-					<td>'.$utente->display_name.'</td>
-					<td>'.$gruppiutenti['Nome'].'</td>
+					<td>'.$user->user_login.'</td>
+					<td>'.$user->display_name.'</td>
+					<td>'.$gruppiutente.'</td>
 					<td>'.$firma->datafirma.'</td>';
 	if ($Tipo==1){
 		switch ($firma->adesione){
