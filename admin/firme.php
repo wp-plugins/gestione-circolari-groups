@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.3
+ * @ver 1.4
  */
  
 function circolariG_VisualizzaFirmate()

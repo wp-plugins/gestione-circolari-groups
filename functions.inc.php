@@ -5,7 +5,7 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.3
+ * @ver 1.4
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -196,6 +196,8 @@ function gcg_Is_Circolare_per_User($IDCircolare,$IDUser=-1){
 		$DestTutti=-1;
 	$GDes=get_post_meta($IDCircolare, "_destinatari");
 	$GDes=unserialize($GDes[0]);
+	if (empty($GDes))
+		$GDes=array();
 	if (in_array($DestTutti,$GDes))
 		$Vis=TRUE;
 	else
