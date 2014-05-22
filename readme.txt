@@ -3,7 +3,7 @@ Contributors: Scimone Ignazio
 Tags: Gestione Circolari, Scuola, Gestione Scuola, Groups
 Requires at least: 3.7
 Tested up to: 3.9.1
-Stable tag: 1.2
+Stable tag: 1.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,9 @@ Di seguito sono riportati i passi necessari per l'installazione del plugin.
 8. Visualizzazione di una circolare
 
 == Changelog ==
+= 1.3 =
+- <strong>Implementata</strong> gestione delle circolari protette da password
+- <strong>Sistemato</strong> bug che poteva essere generato in fase di verifica dei destinatari della circolare
 = 1.2 =
 - <strong>Sistemato</strong> bug delle visualizzazione Circolari firmate FrontEnd
 = 1.1 =

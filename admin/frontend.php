@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 1.2
+ * @since 1.3
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -71,7 +71,7 @@ foreach($Circolari as $post) {
 		$Contenuto.='
 		<div style="margin-bottom:15px;padding:3px;">';
 		$Contenuto.='
-			<h4>'.gcg_FormatDataItaliano($post->post_date).' - 
+			<h4>'.gcg_FormatDataItaliano($post->post_date).' '.$post->ID. ' - 
 			<a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a></h4>
 			<div style="height:30px;">
 				<div style="display:inline;">
@@ -88,6 +88,19 @@ foreach($Circolari as $post) {
 				<div style="display:inline;vertical-align:top;">
 					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;">'.$Elenco.'</p>
 				</div>';
+		if (!post_password_required( $post->ID ))
+			$riassunto=	$post->post_excerpt;
+		else{
+			$riassunto="";
+		}
+		if (!empty($post->post_password))
+			$Contenuto.='
+				<div style="display:inline;">
+					<img src="'.Circolari_URL.'img/protetto.png" style="border:0;" alt="Icona protezione"/>
+				</div>
+				<div style="display:inline;vertical-align:top;">
+					<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;">Contenuto Protetto</p>
+				</div>';	
 		if (!gcg_Is_Circolare_Firmata($post->ID)){
 			if (get_post_meta($post->ID, "_sciopero",TRUE)=="Si")
 				$Tipo="Esprimere adesione";
@@ -105,7 +118,7 @@ foreach($Circolari as $post) {
 		$Contenuto.='	
 			</div>
 			<div style="margin-bottom:5px;">
-				<em>'.$post->post_excerpt .'</em>
+				<em>'.$riassunto .'</em>
 			</div>
 			<hr />
 		</div>';

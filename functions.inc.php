@@ -5,10 +5,11 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.2
+ * @ver 1.3
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
+
 
 function gcg_FormatDataItaliano($Data){
 	$mesi = array('', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio',  'Agosto', 'Settembre', 'Ottobre', 'Novembre','Dicembre');
@@ -166,7 +167,6 @@ function gcg_get_Gruppi_Utente($IdUser){
 	return substr($Gruppi,0,strlen($Gruppi)-3);
 }
 
-
 function gcg_get_Circolari_Gruppi(){
 	global $wpdb,$table_prefix;
 	$Gruppi=array();
@@ -192,6 +192,8 @@ function gcg_Is_Circolare_per_User($IDCircolare,$IDUser=-1){
 	}
 	$Vis=FALSE;
 	$DestTutti=get_option('Circolari_Visibilita_Pubblica');
+	if($DestTutti===FALSE)
+		$DestTutti=-1;
 	$GDes=get_post_meta($IDCircolare, "_destinatari");
 	$GDes=unserialize($GDes[0]);
 	if (in_array($DestTutti,$GDes))
