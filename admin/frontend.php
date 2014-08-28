@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 1.4
+ * @since 1.5
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -41,7 +41,7 @@ $args = array( 'category' => $IdCircolari,
 			   'post_status' => 'publish');
 $Circolari = get_posts($args);
 if (empty($Circolari)){
-	$Contenuto.='<h3>Non risultano circolari per l\'anno '.$annocorrente.' mese '.gcg_MeseNL($mesecorrente).' verranno visualizzate le ultime 5 codificate</h3>';
+	$Contenuto.='<h3>Non risultano circolari per '.$mesecorrente.' '.$annocorrente.' verranno visualizzate le ultime 5</h3>';
 	$args = array( 'category' => $IdCircolari,
 		       'post_type' => array('post','circolari'),
 			   'posts_per_page'  => 5,
@@ -70,9 +70,11 @@ foreach($Circolari as $post) {
 			}
 		$Contenuto.='
 		<div style="margin-bottom:15px;padding:3px;">';
+		$numero=get_post_meta($post->ID, "_numero",TRUE);
+		$anno=get_post_meta($post->ID, "_anno",TRUE);
 		$Contenuto.='
-			<h4>'.gcg_FormatDataItaliano($post->post_date).' '.$post->ID. ' - 
-			<a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a></h4>
+			<h4><a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a></h4>
+			<div style="font-weight: bold;font-size:0.8em;margin-top:3px;">Del '.gcg_FormatDataItaliano($post->post_date).' Numero '.$numero.'_'.$anno.'</div> 
 			<div style="height:30px;">
 				<div style="display:inline;">
 					<img src="'.Circolari_URL.'/img/tipo.png" style="border:0;float:left;" alt="Icona tipo circolare"/>

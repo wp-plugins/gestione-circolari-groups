@@ -5,34 +5,62 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.4
+ * @ver 1.5
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
 
 
-function gcg_FormatDataItaliano($Data){
-	$mesi = array('', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio',  'Agosto', 'Settembre', 'Ottobre', 'Novembre','Dicembre');
-	$giorni = array('Domenica','Lunedì','Martedì', 'Mercoledì', 'Giovedì', 'Venerdì','Sabato');
-	list($anno,$mese,$giorno) = explode('-',substr($Data,0,10)); 
-	return $giorno.' '.substr($mesi[intval($mese)],0,3).' '.$anno;
-}
-function gcg_GetNumeroCircolare($PostID){
-	$numero=get_post_meta($PostID, "_numero");
-	$numero=$numero[0];
-	$anno=get_post_meta($PostID, "_anno");
-	$anno=$anno[0];
-	$NumeroCircolare=$numero.'/'.$anno ;
-return $NumeroCircolare;
+function gcg_FormatDataItalianoBreve($Data){
+	$d=explode("-",$Data);
+	if (count($d)==3)
+		return $d[2]."/".$d[1]."/".$d[0];
+	else
+		return "";
 }
 
-function gcg_Is_Circolare_Da_Firmare($IDCircolare){
-	global $wpdb, $current_user;
+function gcg_FormatDataDB($Data,$incGG=0,$incMM=0,$incAA=0){
+	$d=explode("/",$Data);
+	$Data=$d[2]."-".$d[1]."-".$d[0];
+	if ($incAA>0)
+		$Data=$d[2]+$incAA."-".$d[1]."-".$d[0];
+	if ($incGG>0)
+		$Data=date('Y-m-d', strtotime($Date. ' + '.$incGG.' days'));
+	if ($incMM>0)
+		$Data=date('Y-m-d', strtotime($Date. ' + '.$incMM.' months'));
+	return $Data;
+}
+
+function gcg_MeseLettere($mm){
+	$mesi = array('', 'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio',  'Agosto', 'Settembre', 'Ottobre', 'Novembre','Dicembre');
+	return $mesi[$mm];	
+}
+
+function gcg_GiornoLettere($gg){
+	$giorni = array('Domenica','Lunedì','Martedì', 'Mercoledì', 'Giovedì', 'Venerdì','Sabato');
+	return $giorni[$gg];
+}
+
+function gcg_FormatDataItaliano($Data){
+	list($anno,$mese,$giorno) = explode('-',substr($Data,0,10)); 
+	return $giorno.' '.substr(gcg_MeseLettere(intval($mese)),0,3).' '.$anno;
+}
+
+function gcg_Is_Circolare_Da_Firmare($IDCircolare,$Tutte=False){
+	global $current_user;
+	$ora=date("Y-m-d");
 	get_currentuserinfo();
 	$destinatari=gcg_Get_Users_per_Circolare($IDCircolare);
 	$DaFirmare=get_post_meta( $IDCircolare, "_firma",true);
 	$PresaVisione=get_post_meta( $IDCircolare, "_sciopero",true);
-	if (in_array($current_user->ID,$destinatari) and ($DaFirmare=="Si" or $PresaVisione=="Si"))
+//	echo $IDCircolare." ".$DaFirmare." ".$PresaVisione." ".$current_user->ID;
+	//print_r($destinatari);
+//	echo "<br />";
+	if (!$Tutte)
+		$Scadenza=get_post_meta( $IDCircolare, "_scadenza",true);
+	else
+		$Scadenza=$ora;
+	if (in_array($current_user->ID,$destinatari) and (($DaFirmare=="Si" or $PresaVisione=="Si") and $Scadenza>=$ora))
 		return TRUE;
 	else
 		return FALSE;
@@ -41,7 +69,7 @@ function gcg_Is_Circolare_Da_Firmare($IDCircolare){
 function gcg_Is_Circolare_Firmata($IDCircolare){
 	global $wpdb, $current_user;
 	get_currentuserinfo();
-	if (!gcg_Is_Circolare_Da_Firmare($IDCircolare))
+	if (!gcg_Is_Circolare_Da_Firmare($IDCircolare,TRUE))
 		return TRUE;
 	$ris=$wpdb->get_results("SELECT * FROM $wpdb->table_firme_circolari WHERE post_ID=$IDCircolare AND user_ID=$current_user->ID;");
 	if (!empty($ris))
@@ -71,14 +99,31 @@ function gcg_get_Firma_Circolare($IDCircolare,$IDUser=-1){
 	else
 		return FALSE;	
 }
+function gcg_GetScadenzaCircolare($ID,$TipoRet="Data",$Giorni=False){
+	$Scadenza=get_post_meta( $ID, "_scadenza",true);
+	if ($Giorni){
+//		echo "in giorni ";
+		$seconds_diff = strtotime($Scadenza) - strtotime(date("Y-m-d"));
+		$GGDiff=intval(floor($seconds_diff/3600/24));
+		return $GGDiff;
+	}
+	if ($TipoRet=="Data"){
+		$Pezzi=explode("-",$Scadenza);
+		return $Pezzi[2]."/".$Pezzi[1]."/".$Pezzi[0];
+	}else
+		return $Scadenza;
+}
+function gcg_GetNumeroCircolare($PostID){
+	$numero=get_post_meta($PostID, "_numero");
+	$numero=$numero[0];
+	$anno=get_post_meta($PostID, "_anno");
+	$anno=$anno[0];
+	$NumeroCircolare=$numero.'/'.$anno ;
+return $NumeroCircolare;
+}
 
-function gcg_GetNumCircolariDaFirmare($Tipo="N"){
-	global $wpdb;
-	$ris=$wpdb->get_results("SELECT * 
-	FROM ($wpdb->posts left join $wpdb->postmeta on $wpdb->posts.ID = $wpdb->postmeta.post_id)
-	Where  $wpdb->posts.post_type='circolari' 
-	   and $wpdb->posts.post_status='publish' 
-	   and ($wpdb->postmeta.meta_key='_firma' and $wpdb->postmeta.meta_value ='Si')");
+function gcg_GetCircolariNonFirmate($Tipo="N"){
+	$ris=get_posts('post_type=circolari&numberposts=-1');
 	if (empty($ris))
 		return 0;	
 	if ($Tipo=="N")
@@ -86,23 +131,27 @@ function gcg_GetNumCircolariDaFirmare($Tipo="N"){
 	else
 		$Circolari=array();
 	foreach($ris as $riga){
-		$Vis=gcg_Is_Circolare_per_User($riga->ID);
-		if (!gcg_Is_Circolare_Firmata($riga->ID) and $Vis)
-			if ($Tipo=="N" and $Vis){
-				$Circolari++;
-			}else{
-				$Circolari[]=$riga;
-			}
+		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
+//			echo $riga->ID." ".gcg_GetScadenzaCircolare($riga->ID,"DataDB"); 
+			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TURE:FALSE;
+			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
+/*			if ($Scaduta)
+				echo " Scaduta ";
+			if ($Firmata)
+				echo " Firmata";
+			echo " <br />";*/
+			if (!$Firmata and $Scaduta)
+				if ($Tipo=="N")
+					$Circolari++;
+				else
+					$Circolari[]=$riga;
+		}
 	}
 	return $Circolari;
 }
-function gcg_GetNumCircolariFirmate($Tipo="N"){
-	global $wpdb;
-	$ris=$wpdb->get_results("SELECT * 
-	FROM ($wpdb->posts left join $wpdb->postmeta on $wpdb->posts.ID = $wpdb->postmeta.post_id)
-	Where  $wpdb->posts.post_type='circolari' 
-	   and $wpdb->posts.post_status='publish' 
-	   and ($wpdb->postmeta.meta_key='_firma' and $wpdb->postmeta.meta_value ='Si')");
+
+function gcg_GetCircolariDaFirmare($Tipo="N"){
+	$ris=get_posts('post_type=circolari&numberposts=-1');
 	if (empty($ris))
 		return 0;	
 	if ($Tipo=="N")
@@ -110,13 +159,36 @@ function gcg_GetNumCircolariFirmate($Tipo="N"){
 	else
 		$Circolari=array();
 	foreach($ris as $riga){
-		$Vis=gcg_Is_Circolare_per_User($riga->ID);
-		if (gcg_Is_Circolare_Firmata($riga->ID) and $Vis)
-			if ($Tipo=="N" and $Vis){
-				$Circolari++;
-			}else{
-				$Circolari[]=$riga;
+		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
+			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TURE:FALSE;
+			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
+			if (!$Firmata and !$Scaduta){
+				if ($Tipo=="N")
+					$Circolari++;
+				else
+					$Circolari[]=$riga;
 			}
+		}
+	}
+	return $Circolari;
+}
+function gcg_GetCircolariFirmate($Tipo="N"){
+	$ris=get_posts('post_type=circolari&numberposts=-1');
+	if (empty($ris))
+		return 0;	
+	if ($Tipo=="N")
+		$Circolari=0;
+	else
+		$Circolari=array();
+	foreach($ris as $riga){
+		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
+			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
+			if ($Firmata)
+				if ($Tipo=="N")
+					$Circolari++;
+				else
+					$Circolari[]=$riga;
+		}
 	}
 	return $Circolari;
 }

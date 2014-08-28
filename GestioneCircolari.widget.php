@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.4
+ * @ver 1.5
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -44,7 +44,7 @@ public function widget( $args, $instance )
 			$titolo="Circolari";
 		echo $before_widget;
         echo $before_title .$titolo. $after_title;
-		$NumCircolari=gcg_GetNumCircolariDaFirmare("N");
+		$NumCircolari=gcg_GetCircolariDaFirmare("N");
 		echo "<div>";
 		if ($NumCircolari>0)
 			echo '

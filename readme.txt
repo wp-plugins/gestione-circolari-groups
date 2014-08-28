@@ -3,7 +3,7 @@ Contributors: Scimone Ignazio
 Tags: Gestione Circolari, Scuola, Gestione Scuola, Groups
 Requires at least: 3.7
 Tested up to: 3.9.1
-Stable tag: 1.4
+Stable tag: 1.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,13 @@ Di seguito sono riportati i passi necessari per l'installazione del plugin.
 8. Visualizzazione di una circolare
 
 == Changelog ==
+= 1.5 =
+- <strong>Sistemati</strong> diversi bug di visualizzazione delle circolari
+- <strong>Migliorata</strong> l'interfaccia sia pubblica che amministrativa
+- <strong>Implementata</strong> la possibilita' di inserire la data entro cui firmare le circolari
+- <strong>Implementata</strong> la visualizzazione delle circolari relative all'utente per tipologia;Firmate, Non Firmate e Scadute
+- <strong>Implementata</strong> la gestione dinamica delle tabelle tramite plugin JQuery con la possibilità di stampare o esportare le tabelle in CSV, Excel e Pdf
+- <strong>Modificata</strong> la gestione della numerazione delle circolari per anno scolastico nel formato aaaa/aa
 = 1.4 =
 - <strong>Sistemato</strong> bug verifica destinatari della circolare
 = 1.3 =
