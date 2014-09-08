@@ -5,7 +5,7 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.5
+ * @ver 1.6
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -56,8 +56,11 @@ function gcg_Is_Circolare_Da_Firmare($IDCircolare,$Tutte=False){
 //	echo $IDCircolare." ".$DaFirmare." ".$PresaVisione." ".$current_user->ID;
 	//print_r($destinatari);
 //	echo "<br />";
-	if (!$Tutte)
+	if (!$Tutte){
 		$Scadenza=get_post_meta( $IDCircolare, "_scadenza",true);
+		if(!$Scadenza)
+			$Scadenza=date("Y-m-d");
+	}
 	else
 		$Scadenza=$ora;
 	if (in_array($current_user->ID,$destinatari) and (($DaFirmare=="Si" or $PresaVisione=="Si") and $Scadenza>=$ora))
@@ -101,6 +104,9 @@ function gcg_get_Firma_Circolare($IDCircolare,$IDUser=-1){
 }
 function gcg_GetScadenzaCircolare($ID,$TipoRet="Data",$Giorni=False){
 	$Scadenza=get_post_meta( $ID, "_scadenza",true);
+	if (!$Scadenza){
+		$Scadenza=date("Y-m-d");
+	}
 	if ($Giorni){
 //		echo "in giorni ";
 		$seconds_diff = strtotime($Scadenza) - strtotime(date("Y-m-d"));
@@ -133,7 +139,7 @@ function gcg_GetCircolariNonFirmate($Tipo="N"){
 	foreach($ris as $riga){
 		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
 //			echo $riga->ID." ".gcg_GetScadenzaCircolare($riga->ID,"DataDB"); 
-			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TURE:FALSE;
+			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TRUE:FALSE;
 			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
 /*			if ($Scaduta)
 				echo " Scaduta ";

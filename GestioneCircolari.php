@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:1.5
+Version:1.6
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -651,8 +651,9 @@ $anno=$anno[0];
 $numero=$numero[0];
 if ($anno=="" or !$anno){
 	$anno=date("Y");
+	$canno=strval(date("y"))+1;
 	if (date("n")>8)
-		$anno=$anno."/".date("y")+1;
+		$anno=$anno."/".$canno;
 	else	
 		$anno=($anno-1)."/".date("y");
 }
@@ -742,15 +743,14 @@ if ($Tipo==1)
 else	
 	$sottrai=0;
 echo '
-<div style="width:100%;margin-top:20px;">
-	<table class="widefat">
-		<caption>Elenco Firme</caption>
-		<thead>
-			<tr>
-				<th style="width:'.(15-$sottrai).'%;">User login</th>
-				<th style="width:'.(30-$sottrai).'%;">Nome visualizzato</th>
-				<th style="width:'.(20-$sottrai).'%;">Gruppo</th>
-				<th style="width:'.(15-$sottrai).'%;">Data Firma</th>';
+	<div>
+		<table  id="TabellaCircolari" class="widefat"  cellspacing="0" width="99%">
+			<thead>
+				<tr>
+					<th style="width:'.(20-$sottrai).'%;">User login</th>
+					<th style="width:'.(30-$sottrai).'%;" id="ColOrd" sorted="1">Cognome</th>
+					<th style="width:'.(15-$sottrai).'%;">Gruppo</th>
+					<th style="width:'.(15-$sottrai).'%;">Data Firma</th>';
 if ($Tipo==1)
 	echo '
 				<th style="width:12%;">Adesione</th>';				
