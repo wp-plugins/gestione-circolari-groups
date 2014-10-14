@@ -5,7 +5,7 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.6
+ * @ver 2.0
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -80,6 +80,27 @@ function gcg_Is_Circolare_Firmata($IDCircolare){
 	else
 		return FALSE;	
 }
+
+function gcg_Is_Circolare_Scaduta($IDCircolare){
+	global $wpdb, $current_user;
+	$ora=date("Y-m-d");
+	get_currentuserinfo();
+	$destinatari=gcg_Get_Users_per_Circolare($IDCircolare,"ID");
+	$DaFirmare=get_post_meta( $IDCircolare, "_firma",true);
+	$PresaVisione=get_post_meta( $IDCircolare, "_sciopero",true);
+	$Scadenza=get_post_meta( $IDCircolare, "_scadenza",true);		
+	if (!$Scadenza){		
+		return FALSE;	
+	}
+//	echo $Scadenza."  ".$ora." ".$DaFirmare." ".$PresaVisione;
+	if ($Scadenza<$ora)
+		echo "Scaduta";
+	if (in_array($current_user->ID,$destinatari) and (($DaFirmare=="Si" or $PresaVisione=="Si") and strtotime($Scadenza)<strtotime($ora)))
+		return TRUE;
+	else
+		return FALSE;
+}
+
 function gcg_get_Circolare_Adesione($IDCircolare){
 	global $wpdb, $current_user;
 	get_currentuserinfo();
@@ -110,6 +131,7 @@ function gcg_GetScadenzaCircolare($ID,$TipoRet="Data",$Giorni=False){
 	if ($Giorni){
 //		echo "in giorni ";
 		$seconds_diff = strtotime($Scadenza) - strtotime(date("Y-m-d"));
+//		echo $Scadenza." ".date("Y-m-d");
 		$GGDiff=intval(floor($seconds_diff/3600/24));
 		return $GGDiff;
 	}
@@ -129,6 +151,37 @@ return $NumeroCircolare;
 }
 
 function gcg_GetCircolariNonFirmate($Tipo="N"){
+	global $wpdb, $current_user,$table_prefix;
+	$tabella_firme = $table_prefix . "firme_circolari";
+	get_currentuserinfo();
+	$IDUser=$current_user->ID;
+	$Oggi=date('Y-m-d');
+	$Sql="SELECT $wpdb->posts.ID,$wpdb->posts.post_title
+		  FROM $wpdb->posts inner join $wpdb->postmeta on
+		   ($wpdb->posts.ID = $wpdb->postmeta.post_id)
+		  WHERE ($wpdb->posts.post_type   ='circolari' and $wpdb->posts.post_status ='publish')
+		    and (($wpdb->postmeta.meta_key = '_firma' and $wpdb->postmeta.meta_value = 'Si')  
+	              or ($wpdb->postmeta.meta_key = '_sciopero' and $wpdb->postmeta.meta_value = 'Si'))
+            and ($wpdb->posts.ID IN (Select $wpdb->postmeta.post_ID from $wpdb->postmeta Where $wpdb->postmeta.meta_key = '_scadenza' and $wpdb->postmeta.meta_value <'$Oggi'))
+	        and ($wpdb->posts.ID NOT IN (Select $tabella_firme.post_ID from $tabella_firme Where $tabella_firme.user_ID=$IDUser))
+            GROUP BY ID";
+//    echo $Sql;
+	$ris= $wpdb->get_results($Sql);
+	if ($Tipo=="N")
+		$Circolari=0;
+	else
+		$Circolari=array();
+	foreach($ris as $riga){
+		if (gcg_Is_Circolare_per_User($riga->ID)){
+			if ($Tipo=="N"){
+				$Circolari++;
+			}
+			else
+				$Circolari[]=$riga;
+		}
+	}
+	return $Circolari;	
+/*	
 	$ris=get_posts('post_type=circolari&numberposts=-1');
 	if (empty($ris))
 		return 0;	
@@ -139,13 +192,13 @@ function gcg_GetCircolariNonFirmate($Tipo="N"){
 	foreach($ris as $riga){
 		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
 //			echo $riga->ID." ".gcg_GetScadenzaCircolare($riga->ID,"DataDB"); 
-			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TRUE:FALSE;
+			$Scaduta=strtotime(gcg_GetScadenzaCircolare($riga->ID,"DataDB"))<strtotime(date("Y-m-d"))?TRUE:FALSE;
 			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
-/*			if ($Scaduta)
+/ *			if ($Scaduta)
 				echo " Scaduta ";
 			if ($Firmata)
 				echo " Firmata";
-			echo " <br />";*/
+			echo " <br />";* /
 			if (!$Firmata and $Scaduta)
 				if ($Tipo=="N")
 					$Circolari++;
@@ -153,10 +206,43 @@ function gcg_GetCircolariNonFirmate($Tipo="N"){
 					$Circolari[]=$riga;
 		}
 	}
-	return $Circolari;
+	return $Circolari;*/
 }
 
 function gcg_GetCircolariDaFirmare($Tipo="N"){
+	global $wpdb, $current_user,$table_prefix;
+	$tabella_firme = $table_prefix . "firme_circolari";
+	get_currentuserinfo();
+	$IDUser=$current_user->ID;
+	$Oggi=date('Y-m-d');
+	$Sql="SELECT $wpdb->posts.ID,$wpdb->posts.post_title
+		  FROM $wpdb->posts inner join $wpdb->postmeta on
+		   ($wpdb->posts.ID = $wpdb->postmeta.post_id)
+		  WHERE ($wpdb->posts.post_type   ='circolari' and $wpdb->posts.post_status ='publish')
+		    and (($wpdb->postmeta.meta_key = '_firma' and $wpdb->postmeta.meta_value = 'Si')  
+	              or ($wpdb->postmeta.meta_key = '_sciopero' and $wpdb->postmeta.meta_value = 'Si'))
+            and ($wpdb->posts.ID IN (Select $wpdb->postmeta.post_ID from $wpdb->postmeta Where $wpdb->postmeta.meta_key = '_scadenza' and $wpdb->postmeta.meta_value >='$Oggi'))
+	        and ($wpdb->posts.ID NOT IN (Select $tabella_firme.post_ID from $tabella_firme Where $tabella_firme.user_ID=$IDUser))
+            GROUP BY ID";
+//    echo $Sql;
+	$ris= $wpdb->get_results($Sql);
+	if (empty($ris))
+		return 0;	
+	if ($Tipo=="N")
+		$Circolari=0;
+	else
+		$Circolari=array();
+	foreach($ris as $riga){
+		if (gcg_Is_Circolare_per_User($riga->ID)){
+			if ($Tipo=="N"){
+				$Circolari++;
+			}
+			else
+				$Circolari[]=$riga;
+		}
+	}
+	return $Circolari;	
+/*
 	$ris=get_posts('post_type=circolari&numberposts=-1');
 	if (empty($ris))
 		return 0;	
@@ -166,7 +252,7 @@ function gcg_GetCircolariDaFirmare($Tipo="N"){
 		$Circolari=array();
 	foreach($ris as $riga){
 		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
-			$Scaduta=gcg_GetScadenzaCircolare($riga->ID,"DataDB")<date("Y-m-d")?TURE:FALSE;
+			$Scaduta=strtotime(gcg_GetScadenzaCircolare($riga->ID,"DataDB"))<strtotime(date("Y-m-d"))?TURE:FALSE;
 			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
 			if (!$Firmata and !$Scaduta){
 				if ($Tipo=="N")
@@ -177,9 +263,11 @@ function gcg_GetCircolariDaFirmare($Tipo="N"){
 		}
 	}
 	return $Circolari;
+*/
 }
+
 function gcg_GetCircolariFirmate($Tipo="N"){
-	$ris=get_posts('post_type=circolari&numberposts=-1');
+/*	$ris=get_posts('post_type=circolari&numberposts=-1');
 	if (empty($ris))
 		return 0;	
 	if ($Tipo=="N")
@@ -197,6 +285,23 @@ function gcg_GetCircolariFirmate($Tipo="N"){
 		}
 	}
 	return $Circolari;
+*/
+	global $wpdb, $current_user,$table_prefix;
+	$tabella_firme = $table_prefix . "firme_circolari";
+	get_currentuserinfo();
+	$IDUser=$current_user->ID;
+	$Sql="SELECT $wpdb->posts.ID,$wpdb->posts.post_title, $tabella_firme.*
+		  FROM $wpdb->posts inner join $tabella_firme on
+		   ($wpdb->posts.ID = $tabella_firme.post_ID)
+		  WHERE 
+		        $wpdb->posts.post_type   ='circolari' 
+	        and $wpdb->posts.post_status ='publish'
+	        and $tabella_firme.user_ID=$IDUser";
+	$ris= $wpdb->get_results($Sql);
+	if ($Tipo=="N")
+		return count($ris);
+	else	
+		return $ris;
 }
 
 function gcg_Get_Users_per_Circolare($IDCircolare){

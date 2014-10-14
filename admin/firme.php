@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 1.6
+ * @ver 2.0
  */
  
 function circolariG_VisualizzaFirmate()
@@ -42,6 +42,7 @@ function circolariG_VisualizzaFirmate()
 		$Adesione=get_post_meta($post->ID, "_sciopero");
 		$TipoCircolare="Circolare";
 		$Campo_Firma="";
+		$firma=get_post_meta($post->ID, "_firma");
 		if($firma[0]=="Si"){
 			$Campo_Firma="Firmata".$Campo_Firma_Adesione;
 		}
@@ -55,11 +56,10 @@ function circolariG_VisualizzaFirmate()
 				$Campo_Firma="adesione No";		
 				break;
 			case 3:
-				$Campo_Firma="adesione Presa Visione";				
+				$Campo_Firma="Presa Visione";				
 				break;
 			}
 		}	
-		$firma=get_post_meta($post->ID, "_firma");
 		$dati_firma=gcg_get_Firma_Circolare($post->ID);
 		echo "
 				<tr>
@@ -156,7 +156,7 @@ function circolariG_VisualizzaTabellaCircolari(){
 				<tr>
 					<th style="width:5%;">N°</th>
 					<th style="width:60%;">Titolo</th>
-					<th style="width:15%;" id="ColOrd" sorted="-2">Scadenza</th>
+					<th style="width:15%;" id="ColOrd" sorted="2">Scadenza</th>
 					<th style="width:20%;">Firma</th>
 				</tr>
 			</thead>

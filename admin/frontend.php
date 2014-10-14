@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 1.6
+ * @since 2.0
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -103,19 +103,53 @@ foreach($Circolari as $post) {
 				<div style="display:inline;vertical-align:top;">
 					<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;">Contenuto Protetto</p>
 				</div>';	
-		if (!gcg_Is_Circolare_Firmata($post->ID)){
-			if (get_post_meta($post->ID, "_sciopero",TRUE)=="Si")
-				$Tipo="Esprimere adesione";
-			else
-			if (get_post_meta($post->ID, "_firma",TRUE)=="Si")
-				$Tipo="Firmare";
+		if (gcg_Is_Circolare_Da_Firmare($post->ID))
+			if (!gcg_Is_Circolare_Firmata($post->ID)) {
+				$ngiorni=gcg_GetscadenzaCircolare($post->ID,"",True);		
+				if(gcg_Is_Circolare_Scaduta($post->ID)){
+					$Contenuto.='
+					<div style="display:inline;">
+						<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
+					</div>
+					<div style="display:inline;vertical-align:top;">
+						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">Scaduta da '.abs($ngiorni).' giorni</p>
+					</div>';
+				}else{
+					switch ($ngiorni){
+						case -1:							
+							$entro="";							
+							break;													
+						case 0:
+							$entro="entro OGGI";
+							break;
+						case 1:
+							$entro="entro DOMANI";
+							break;
+						default:
+							$entro="entro $ngiorni giorni";
+							break;
+					}
+					if (get_post_meta($post->ID, "_sciopero",TRUE)=="Si")
+						$Tipo="Esprimere adesione $entro";
+					else
+						if (get_post_meta($post->ID, "_firma",TRUE)=="Si")
+							$Tipo="Firmare $entro";
+					$Contenuto.='
+					<div style="display:inline;">
+						<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
+					</div>
+					<div style="display:inline;vertical-align:top;">
+						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">'.$Tipo.'</p>
+					</div>';	
+				}
+		}else{
 			$Contenuto.='
-				<div style="display:inline;">
-					<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
-				</div>
-				<div style="display:inline;vertical-align:top;">
-					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;color:red;">'.$Tipo.'</p>
-				</div>';	
+			<div style="display:inline;">
+				<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
+			</div>
+			<div style="display:inline;vertical-align:top;">
+				<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:blue;">Firmata</p>
+			</div>';				
 		}
 		$Contenuto.='	
 			</div>

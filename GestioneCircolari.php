@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:1.6
+Version:2.0
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -58,13 +58,14 @@ add_filter('manage_posts_columns', 'circolariG_NuoveColonne');
 add_action('manage_posts_custom_column', 'circolariG_NuoveColonneContenuto', 10, 2); 
 add_action( 'admin_menu', 'circolariG_menu' ); 
 add_action('init', 'circolariG_update_Impostazioni');
-add_action( 'contextual_help', 'circolariG_Help', 10, 3 );
-add_action( 'wp_before_admin_bar_render', 'circolariG_admin_bar_render' );
+//add_action( 'contextual_help', 'circolariG_Help', 10, 3 );
+//add_action( 'wp_before_admin_bar_render', 'circolariG_admin_bar_render' );
 add_action( 'admin_menu', 'circolariG_add_menu_bubble' );
 register_uninstall_hook(__FILE__,  'circolariG_uninstall' );
 register_activation_hook( __FILE__,  'circolariG_activate');
 add_filter( 'the_content', 'circolariG_vis_firma');
 add_shortcode('VisCircolari', 'circolariG_Visualizza');
+add_shortcode('VisCircolariHome', 'circolariG_VisualizzaCircolariHome');
 add_action('wp_head', 'circolariG_Testata' );
 add_action( 'admin_enqueue_scripts',  'circolariG_Admin_Enqueue_Scripts' );
 
@@ -107,15 +108,21 @@ function circolariG_Visualizza(){
 	require_once ( dirname (__FILE__) . '/admin/frontend.php' );
 	return $ret;
 }
+function circolariG_VisualizzaCircolariHome(){
+	require_once ( dirname (__FILE__) . '/admin/frontendhome.php' );
+	return $ret;
+}
 
 function circolariG_vis_firma( $content ){
 	$PostID= get_the_ID();
 	if (post_password_required( $PostID ))
 		return $content;
-		
 	$Campo_Firma="";
 	if (get_post_type( $PostID) !="circolari")
 		return $content;
+	if (!gcg_Is_Circolare_Da_Firmare($PostID)){
+		return $content;
+	}
 	if (!is_user_logged_in() or !gcg_Is_Circolare_per_User($PostID))
 		return $content;
 	if (strlen(stristr($_SERVER["HTTP_REFERER"],"wp-admin/edit.php?post_type=circolari&page=Firma"))>0)
@@ -144,13 +151,13 @@ function circolariG_vis_firma( $content ){
 					$Campo_Firma_Adesione=": adesione No";		
 					break;
 				case 3:
-					$Campo_Firma_Adesione=": adesione Presa Visione";				
+					$Campo_Firma_Adesione=": Presa Visione";				
 					break;
 				}
 			}	
 			$firma=get_post_meta($PostID, "_firma");
 			$BaseUrl=admin_url()."edit.php";
-			if($firma[0]=="Si"){
+			if($firma[0]=="Si" or $Adesione[0]=="Si"){
 				if (gcg_Is_Circolare_Firmata($PostID)){
 					$Campo_Firma="Firmata".$Campo_Firma_Adesione;
 				}
@@ -189,6 +196,9 @@ function circolariG_activate() {
 	if(get_option('Circolari_GGScadenza')== ''||!get_option('Circolari_GGScadenza')){
 		add_option('Circolari_GGScadenza', '30');
 	}
+   	if(get_option('Circolari_NrCircHome')== ''||!get_option('Circolari_NrCircHome')){
+    	add_option('Circolari_NrCircHome', '0');
+    }
 	$sql = "CREATE TABLE IF NOT EXISTS ".$wpdb->table_firme_circolari." (
   			post_ID  bigint(20) NOT NULL,
   			user_ID bigint(20) NOT NULL,
@@ -366,7 +376,7 @@ $post_id =wp_insert_post( $my_post,$errore );
 echo '<div class="wrap">
 	  	<img src="'.Circolari_URL.'/img/mail.png" alt="Icona Send email" style="display:inline;float:left;margin-top:10px;"/>
 	  	<h2 style="margin-left:40px;">Crea NewsLetter 
-	  	<a href="'.home_url().'/wp-admin/edit.php?post_type=circolari" class="add-new-h2 tornaindietro">Torna indietro</a></h2>';
+	  	<a href="'.site_url().'/wp-admin/edit.php?post_type=circolari" class="add-new-h2 tornaindietro">Torna indietro</a></h2>';
 
 	if($post_id>0){
 		$recipients=Array();
@@ -396,6 +406,7 @@ function circolariG_Parametri(){
 	$DestTutti  =  get_option('Circolari_Visibilita_Pubblica');
 	$GiorniScadenza  =  get_option('Circolari_GGScadenza');
 	$UsaG=get_option('Circolari_UsaGroups');
+	$NrCircolariHome = get_option('Circolari_NrCircHome');
 	if ($UsaG=="si")
 		$UsaG="  checked='checked'";
 	else
@@ -436,6 +447,12 @@ echo'			</td>
 				<input type="text" name="GGScadenza" id="GGScadenza" size="3" maxlength="3" value="'.$GiorniScadenza.'" />
 			</td>				
 		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="NrCircHome">N. di circolari da visionare in home</label></th>
+			<td>
+				<input type="text" name="NrCircHome" id="NrCircHome" size="3" maxlength="3" value="'.$NrCircolariHome.'" />
+			</td>				
+		</tr>
 	</table>
 	    <p class="submit">
 	        <input type="submit" name="Circolari_submit_button" value="Salva Modifiche" />
@@ -450,6 +467,7 @@ function circolariG_update_Impostazioni(){
 	    update_option('Circolari_Categoria',$_POST['Categoria'] );
 	    update_option('Circolari_NumPerPag',$_POST['NCircolariPF'] );
 	    update_option('Circolari_GGScadenza',$_POST['GGScadenza'] );
+		update_option('Circolari_NrCircHome',$_POST['NrCircHome'] );     
 		header('Location: '.get_bloginfo('wpurl').'/wp-admin/edit.php?post_type=circolari'); 
 	}
 }
@@ -559,7 +577,7 @@ function circolariG_admin_bar_render() {
 	$wp_admin_bar->add_menu( array(
 		'id' => 'fc', // link ID, defaults to a sanitized title value
 		'title' => 'Circolari '.$VisNumCircolari, // link title
-		'href' => home_url().'/wp-admin/edit.php?post_type=circolari&page=Firma', // name of file
+		'href' => site_url().'/wp-admin/edit.php?post_type=circolari&page=Firma', // name of file
 		'meta' => array(  'title' => 'Circolari da Firmare' )));
 }
 
