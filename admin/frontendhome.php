@@ -6,7 +6,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 2.0
+ * @ver 2.0.1
  */
 
 
@@ -32,7 +32,7 @@ if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You 
 			else 
 				$visibilita=$visibilita[0];
 
-		if ((Is_Circolare_per_User($post->ID) and $visibilita=="d") or $visibilita=="p"){
+		if ((gcg_Is_Circolare_per_User($post->ID) and $visibilita=="d") or $visibilita=="p"){
 			$fgs = wp_get_object_terms($post->ID, 'gruppiutenti');
 			$Elenco="";
 			if(!empty($fgs)){
@@ -47,7 +47,7 @@ if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You 
 
 			}
 
-			$Contenuto.='<h3>'.FormatDataItaliano($post->post_date).' - 
+			$Contenuto.='<h3>'.gcg_FormatDataItaliano($post->post_date).' - 
 
 			<a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a></h3>';
 
