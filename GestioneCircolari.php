@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:2.0.1
+Version:2.0.2
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -82,6 +82,9 @@ function circolariG_disable_feed() {
 }
 
 function circolariG_Admin_Enqueue_Scripts( $hook_suffix ) {
+	if(strpos($hook_suffix,"circolari")===false)
+		return;	wp_enqueue_script('jquery');
+
 	wp_enqueue_script('jquery');
 	wp_enqueue_script( 'jquery-ui-datepicker', '', array('jquery'));
 	wp_enqueue_script( 'Circolari-admin', plugins_url('js/Circolari.js', __FILE__ ));
