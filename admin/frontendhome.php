@@ -6,7 +6,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 2.0.2
+ * @ver 2.0.3
  */
 
 
@@ -26,13 +26,7 @@ if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You 
 		$Contenuto.=' <div>';
 		
 		foreach($Circolari as $post) {
-			$visibilita=get_post_meta($post->ID, "_visibilita");
-			if(count($visibilita)==0)
-				$visibilita="p";
-			else 
-				$visibilita=$visibilita[0];
-
-		if ((gcg_Is_Circolare_per_User($post->ID) and $visibilita=="d") or $visibilita=="p"){
+		if (gcg_Is_Circolare_per_User($post->ID)){
 			$fgs = wp_get_object_terms($post->ID, 'gruppiutenti');
 			$Elenco="";
 			if(!empty($fgs)){

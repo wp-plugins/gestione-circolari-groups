@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 2.0.2
+ * @since 2.0.3
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -50,13 +50,10 @@ if (empty($Circolari)){
 }
 $Contenuto.=' <div>';
 //print_r($Circolari);
+$NumC=0;
 foreach($Circolari as $post) {
-	$visibilita=get_post_meta($post->ID, "_visibilita");
- 	if(count($visibilita)==0)
- 		$visibilita="p";
- 	else 
- 		$visibilita=$visibilita[0];
-	if ((gcg_Is_Circolare_per_User($post->ID)) or $visibilita=="p"){
+	if (gcg_Is_Circolare_per_User($post->ID)){
+		$NumC++;
 			$Gruppi=gcg_get_Circolari_Gruppi();
 			$Destinatari=get_post_meta($post->ID, "_destinatari");
 			$Elenco="";
@@ -161,8 +158,10 @@ foreach($Circolari as $post) {
 	}
 }
 $Contenuto.= '
-		</div>
-		<div style="clear:both"></div>';
+		</div>';
+if ($NumC==0)
+	$Contenuto.='<span style="color:red;font-style: italic;">Nessuna Circolare filtrata</span>';
+$Contenuto.='	<div style="clear:both"></div>';
 return $Contenuto;
 }
 ?>
