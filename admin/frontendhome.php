@@ -24,9 +24,9 @@ if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You 
 		   'post_status' => 'publish');
 		$Circolari = get_posts($args);
 		$Contenuto.=' <div>';
-		
+		$accesso=new Groups_Post_Access();		
 		foreach($Circolari as $post) {
-		if (gcg_Is_Circolare_per_User($post->ID)){
+		if ($accesso->user_can_read_post($post->ID)){
 			$fgs = wp_get_object_terms($post->ID, 'gruppiutenti');
 			$Elenco="";
 			if(!empty($fgs)){

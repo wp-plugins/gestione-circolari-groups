@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 2.0.3
+ * @since 2.0.4
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -51,8 +51,10 @@ if (empty($Circolari)){
 $Contenuto.=' <div>';
 //print_r($Circolari);
 $NumC=0;
+$accesso=new Groups_Post_Access();
 foreach($Circolari as $post) {
-	if (gcg_Is_Circolare_per_User($post->ID)){
+	if($accesso->user_can_read_post($post->ID)){
+	//if (gcg_Is_Circolare_per_User($post->ID) or true){
 		$NumC++;
 			$Gruppi=gcg_get_Circolari_Gruppi();
 			$Destinatari=get_post_meta($post->ID, "_destinatari");

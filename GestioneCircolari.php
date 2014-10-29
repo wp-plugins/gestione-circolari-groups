@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:2.0.3
+Version:2.0.4
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -229,14 +229,14 @@ function circolariG_add_menu_bubble() {
 }
 
 function circolariG_menu(){
-   add_submenu_page( 'edit.php?post_type=circolari', 'Parametri',  'Parametri', 'manage_options', 'circolari', 'circolariG_MenuPagine');
+   add_submenu_page( 'edit.php?post_type=circolari', 'Parametri',  'Parametri', 'edit_published_posts', 'circolari', 'circolariG_MenuPagine');
    $pageFirma=add_submenu_page( 'edit.php?post_type=circolari', 'Firma',  'Firma', 'read', 'Firma', 'circolariG_GestioneFirme');
    add_action( 'admin_head-'. $pageFirma, 'circolariG_Testata' );
    $pageFirmate=add_submenu_page( 'edit.php?post_type=circolari', 'Firmate',  'Firmate', 'read', 'Firmate', 'circolariG_VisualizzaFirmate');
    add_action( 'admin_head-'. $pageFirma, 'circolariG_Testata' );
    $pagenFirmate=add_submenu_page( 'edit.php?post_type=circolari', 'Scadute e non Firmate', 'Scadute e non Firmate', 'read', 'non_Firmate', 'circolariG_VisualizzaNonFirmate');
    add_action( 'admin_head-'. $pagenFirmate, 'circolariG_Testata' );
-   $utility=add_submenu_page( 'edit.php?post_type=circolari', 'Utility',  'Utility', 'manage_options', 'Utility', 'circolariG_Utility');
+   $utility=add_submenu_page( 'edit.php?post_type=circolari', 'Utility',  'Utility', 'edit_published_posts', 'Utility', 'circolariG_Utility');
    add_action( 'admin_head-'. $utility, 'circolariG_Testata' );
 }
 
@@ -402,7 +402,6 @@ echo '<div class="wrap">
 		add_post_meta ( $IDPost, "_sendNewsLetter",date("d/m/y g:i O"));
 	}else{
 		echo "<p  style='font-weight: bold;font-size: medium;color:red;'>NewsLetter Non Creata correttamente, errore riportato:</p>";
-				print_r($errore);			
 	}
 }
 function circolariG_Parametri(){
