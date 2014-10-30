@@ -5,7 +5,7 @@
  * @package Gestione Circolari
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 2.0.4
+ * @ver 2.1
  */
  
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -181,32 +181,6 @@ function gcg_GetCircolariNonFirmate($Tipo="N"){
 		}
 	}
 	return $Circolari;	
-/*	
-	$ris=get_posts('post_type=circolari&numberposts=-1');
-	if (empty($ris))
-		return 0;	
-	if ($Tipo=="N")
-		$Circolari=0;
-	else
-		$Circolari=array();
-	foreach($ris as $riga){
-		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
-//			echo $riga->ID." ".gcg_GetScadenzaCircolare($riga->ID,"DataDB"); 
-			$Scaduta=strtotime(gcg_GetScadenzaCircolare($riga->ID,"DataDB"))<strtotime(date("Y-m-d"))?TRUE:FALSE;
-			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
-/ *			if ($Scaduta)
-				echo " Scaduta ";
-			if ($Firmata)
-				echo " Firmata";
-			echo " <br />";* /
-			if (!$Firmata and $Scaduta)
-				if ($Tipo=="N")
-					$Circolari++;
-				else
-					$Circolari[]=$riga;
-		}
-	}
-	return $Circolari;*/
 }
 
 function gcg_GetCircolariDaFirmare($Tipo="N"){
@@ -226,8 +200,6 @@ function gcg_GetCircolariDaFirmare($Tipo="N"){
             GROUP BY ID";
 //    echo $Sql;
 	$ris= $wpdb->get_results($Sql);
-	if (empty($ris))
-		return 0;	
 	if ($Tipo=="N")
 		$Circolari=0;
 	else
@@ -242,50 +214,9 @@ function gcg_GetCircolariDaFirmare($Tipo="N"){
 		}
 	}
 	return $Circolari;	
-/*
-	$ris=get_posts('post_type=circolari&numberposts=-1');
-	if (empty($ris))
-		return 0;	
-	if ($Tipo=="N")
-		$Circolari=0;
-	else
-		$Circolari=array();
-	foreach($ris as $riga){
-		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
-			$Scaduta=strtotime(gcg_GetScadenzaCircolare($riga->ID,"DataDB"))<strtotime(date("Y-m-d"))?TURE:FALSE;
-			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
-			if (!$Firmata and !$Scaduta){
-				if ($Tipo=="N")
-					$Circolari++;
-				else
-					$Circolari[]=$riga;
-			}
-		}
-	}
-	return $Circolari;
-*/
 }
 
 function gcg_GetCircolariFirmate($Tipo="N"){
-/*	$ris=get_posts('post_type=circolari&numberposts=-1');
-	if (empty($ris))
-		return 0;	
-	if ($Tipo=="N")
-		$Circolari=0;
-	else
-		$Circolari=array();
-	foreach($ris as $riga){
-		if (gcg_Is_Circolare_Da_Firmare($riga->ID,True)){
-			$Firmata=gcg_Is_Circolare_Firmata($riga->ID);
-			if ($Firmata)
-				if ($Tipo=="N")
-					$Circolari++;
-				else
-					$Circolari[]=$riga;
-		}
-	}
-	return $Circolari;
-*/
 	global $wpdb, $current_user,$table_prefix;
 	$tabella_firme = $table_prefix . "firme_circolari";
 	get_currentuserinfo();
@@ -298,10 +229,17 @@ function gcg_GetCircolariFirmate($Tipo="N"){
 	        and $wpdb->posts.post_status ='publish'
 	        and $tabella_firme.user_ID=$IDUser";
 	$ris= $wpdb->get_results($Sql);
-	if ($Tipo=="N")
-		return count($ris);
-	else	
-		return $ris;
+	if (empty($ris)){
+		if ($Tipo=="N")
+			return 0;
+		else
+			return array();		
+	}else{
+		if ($Tipo=="N")
+			return count($ris);
+		else	
+			return $ris;	
+	}
 }
 
 function gcg_Get_Users_per_Circolare($IDCircolare){

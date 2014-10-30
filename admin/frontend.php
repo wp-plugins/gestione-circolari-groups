@@ -5,7 +5,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @since 2.0.4
+ * @since 2.1
  */
 
 if(preg_match('#' . basename(__FILE__) . '#', $_SERVER['PHP_SELF'])) { die('You are not allowed to call this page directly.'); }
@@ -75,20 +75,12 @@ foreach($Circolari as $post) {
 			<h4><a href="'.get_permalink($post->ID).'">'.$post->post_title.'</a></h4>
 			<div style="font-weight: bold;font-size:0.8em;margin-top:3px;">Del '.gcg_FormatDataItaliano($post->post_date).' Numero '.$numero.'_'.$anno.'</div> 
 			<div style="height:30px;">
-				<div style="display:inline;">
 					<img src="'.Circolari_URL.'/img/tipo.png" style="border:0;float:left;" alt="Icona tipo circolare"/>
-				</div>
-				<div style="display:inline;vertical-align:top;">
-					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;">'.$post->post_type.'</p>
-				</div>';
+					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;">'.$post->post_type.'</p>';
 		if ($post->post_type=="circolari")
 			$Contenuto.='
-				<div style="display:inline;">
-					<img src="'.Circolari_URL.'/img/destinatari.png" style="border:0;" alt="Icona destinatari"/>
-				</div>
-				<div style="display:inline;vertical-align:top;">
-					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;">'.$Elenco.'</p>
-				</div>';
+					<img src="'.Circolari_URL.'/img/gruppo.png" style="border:0;" alt="Icona destinatari"/>
+					<p style="font-style:italic;font-weight:bold;font-size:0.9em;display:inline;margin-top:3px;">'.$Elenco.'</p>';
 		if (!post_password_required( $post->ID ))
 			$riassunto=	$post->post_excerpt;
 		else{
@@ -96,23 +88,15 @@ foreach($Circolari as $post) {
 		}
 		if (!empty($post->post_password))
 			$Contenuto.='
-				<div style="display:inline;">
 					<img src="'.Circolari_URL.'img/protetto.png" style="border:0;" alt="Icona protezione"/>
-				</div>
-				<div style="display:inline;vertical-align:top;">
-					<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;">Contenuto Protetto</p>
-				</div>';	
+					<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;">Contenuto Protetto</p>';	
 		if (gcg_Is_Circolare_Da_Firmare($post->ID))
 			if (!gcg_Is_Circolare_Firmata($post->ID)) {
 				$ngiorni=gcg_GetscadenzaCircolare($post->ID,"",True);		
 				if(gcg_Is_Circolare_Scaduta($post->ID)){
 					$Contenuto.='
-					<div style="display:inline;">
-						<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
-					</div>
-					<div style="display:inline;vertical-align:top;">
-						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">Scaduta da '.abs($ngiorni).' giorni</p>
-					</div>';
+						<img src="'.Circolari_URL.'/img/firmabe.png" style="border:0;" alt="Icona firma o presa visione"/>
+						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">Scaduta da '.abs($ngiorni).' giorni</p>';
 				}else{
 					switch ($ngiorni){
 						case -1:							
@@ -134,21 +118,13 @@ foreach($Circolari as $post) {
 						if (get_post_meta($post->ID, "_firma",TRUE)=="Si")
 							$Tipo="Firmare $entro";
 					$Contenuto.='
-					<div style="display:inline;">
-						<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
-					</div>
-					<div style="display:inline;vertical-align:top;">
-						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">'.$Tipo.'</p>
-					</div>';	
+						<img src="'.Circolari_URL.'/img/firmabe.png" style="border:0;" alt="Icona firma o presa visione"/>
+						<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:red;">'.$Tipo.'</p>';	
 				}
 		}else{
 			$Contenuto.='
-			<div style="display:inline;">
-				<img src="'.Circolari_URL.'/img/firma.png" style="border:0;" alt="Icona firma o presa visione"/>
-			</div>
-			<div style="display:inline;vertical-align:top;">
-				<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:blue;">Firmata</p>
-			</div>';				
+				<img src="'.Circolari_URL.'/img/firmabe.png" style="border:0;" alt="Icona firma o presa visione"/>
+				<p style="font-style:italic;font-size:0.8em;display:inline;margin-top:3px;color:blue;">Firmata</p>';				
 		}
 		$Contenuto.='	
 			</div>

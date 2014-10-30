@@ -3,7 +3,7 @@ Contributors: Scimone Ignazio
 Tags: Gestione Circolari, Scuola, Gestione Scuola, Groups
 Requires at least: 3.7
 Tested up to: 4.0
-Stable tag: 2.0.4
+Stable tag: 2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -44,6 +44,10 @@ Di seguito sono riportati i passi necessari per l'installazione del plugin.
 8. Visualizzazione di una circolare
 
 == Changelog ==
+= 2.1 =
+- <strong>Corretto</strong> il warning generato in visualizzazione firme nel caso in cui non sono state codificate circolari
+- <strong>Sostituito</strong> il set di icone, sono state adottate sia nel ForntEnd che nel BackEnd icone falt in bianco e nero
+- <strong>Risolto</strong> problema di visualizzazione dell'elenco circolari
 = 2.0.4 =
 - <strong>Sistemato</strong> filtro visualizzazione delle circolari nel FrontEnd
 = 2.0.3 =
