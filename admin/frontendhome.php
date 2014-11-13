@@ -6,7 +6,7 @@
  * @package Gestione Circolari Groups
  * @author Scimone Ignazio
  * @copyright 2011-2014
- * @ver 2.1
+ * @ver 2.2
  */
 
 
