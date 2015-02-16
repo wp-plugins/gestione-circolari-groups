@@ -3,7 +3,7 @@
 Plugin Name:Gestione Circolari Groups
 Plugin URI: http://www.sisviluppo.info
 Description: Plugin che implementa la gestione delle circolari scolastiche
-Version:2.2
+Version:2.3
 Author: Scimone Ignazio
 Author URI: http://www.sisviluppo.info
 License: GPL2
@@ -34,19 +34,20 @@ include_once(Circolari_DIR."/GestioneCircolari.widget.php");
 include_once(Circolari_DIR."/GestioneNavigazioneCircolari.widget.php");
 $msg="";
 require_once(ABSPATH . 'wp-includes/pluggable.php'); 
-
-switch ($_REQUEST["op"]){
-	case "Firma":
-		global $msg;
-		$msg=gcg_FirmaCircolare($_REQUEST["pid"],-1);
-		break;
-	case "Adesione":
-		global $msg;
-		$msg=gcg_FirmaCircolare($_REQUEST["pid"],$_REQUEST["scelta"]);
-		break;	
+if(isset($_REQUEST["op"])){
+	switch ($_REQUEST["op"]){
+		case "Firma":
+			global $msg;
+			$msg=gcg_FirmaCircolare($_REQUEST["pid"],-1);
+			break;
+		case "Adesione":
+			global $msg;
+			$msg=gcg_FirmaCircolare($_REQUEST["pid"],$_REQUEST["scelta"]);
+			break;	
+	}
 }
 
-if ($_GET['update'] == 'true')
+if (isset($_GET['update']) And $_GET['update'] == 'true')
 	$stato="<div id='setting-error-settings_updated' class='updated settings-error'> 
 			<p><strong>Impostazioni salvate.</strong></p></div>";
 
@@ -59,7 +60,7 @@ add_action('manage_posts_custom_column', 'circolariG_NuoveColonneContenuto', 10,
 add_action( 'admin_menu', 'circolariG_menu' ); 
 add_action('init', 'circolariG_update_Impostazioni');
 //add_action( 'contextual_help', 'circolariG_Help', 10, 3 );
-//add_action( 'wp_before_admin_bar_render', 'circolariG_admin_bar_render' );
+add_action( 'wp_before_admin_bar_render', 'circolariG_admin_bar_render' );
 add_action( 'admin_menu', 'circolariG_add_menu_bubble' );
 register_uninstall_hook(__FILE__,  'circolariG_uninstall' );
 register_activation_hook( __FILE__,  'circolariG_activate');
@@ -118,11 +119,17 @@ function circolariG_VisualizzaCircolariHome(){
 
 function circolariG_vis_firma( $content ){
 	$PostID= get_the_ID();
+/*
+ * Se l'articolo non appartiene al CustomPostType Circolari rimando il contenuto
+ */
+	if (get_post_type( $PostID) !="circolari")
+		return $content;
+/*
+ * Se l'articolo richiede la password rimando tutto il contenuto con la richiesta della password
+ */
 	if (post_password_required( $PostID ))
 		return $content;
 	$Campo_Firma="";
-	if (get_post_type( $PostID) !="circolari")
-		return $content;
 	if (!gcg_Is_Circolare_Da_Firmare($PostID)){
 		return $content;
 	}
@@ -214,7 +221,7 @@ function circolariG_activate() {
 }
 	
 function circolariG_add_menu_bubble() {
-  global $menu;
+  global $menu,$NumCircolari;
   $NumCircolari=gcg_GetCircolariDaFirmare("N");
   if ($NumCircolari==0)
 	return;
@@ -409,10 +416,15 @@ function circolariG_Parametri(){
 	$GiorniScadenza  =  get_option('Circolari_GGScadenza');
 	$UsaG=get_option('Circolari_UsaGroups');
 	$NrCircolariHome = get_option('Circolari_NrCircHome');
-	if ($UsaG=="si")
-		$UsaG="  checked='checked'";
+	$GestPerm=get_option('Circolari_GestPerm');
+	if($GestPerm=="ext")
+		$GPE=" checked='checked'";
 	else
-		$UsaG="";
+		$GPP=" checked='checked'";
+	if ($UsaG=="si")
+		$UsaG=" checked='checked'";
+	else
+		$UsaG="";	
 echo'
 <div class="wrap">
 	  	<img src="'.Circolari_URL.'/img/opzioni32.png" alt="Icona configurazione" style="display:inline;float:left;margin-top:10px;"/>
@@ -455,6 +467,35 @@ echo'			</td>
 				<input type="text" name="NrCircHome" id="NrCircHome" size="3" maxlength="3" value="'.$NrCircolariHome.'" />
 			</td>				
 		</tr>
+		<tr valign="top">
+			<th scope="row"><label for="GestPerm">Tipologia gestione permessi</label></th>
+			<td>
+				<input type="radio" name="GestPerm" id="GestPerm" value="int" '.$GPP.'" />Standard
+				<input type="radio" name="GestPerm" id="GestPerm" value="ext" '.$GPE.'" />Esteso
+				<ul style="list-style: disc;font-style: italic;">
+					<li>Standard: vengono mantenuti le capabilities standard dei Posts</li>
+					<li>Esteso: vengono creati capabilities
+						<p>Capabilities
+						<ul style="margin-left:30px;list-style: circle;font-style: italic;">
+							<li>delete_circolares</li>
+							<li>delete_others_circolares</li>
+							<li>delete_private_circolares</li>
+							<li>delete_published_circolares</li>
+							<li>edit_circolares</li>
+							<li>edit_others_circolares</li>
+							<li>edit_private_circolares</li>
+							<li>edit_published_circolares</li>
+							<li>publish_circolares</li>
+							<li>read_private_circolares</li>
+							<li>send_circ@mail; <strong>permette di gestire le newsletter</strong></li>
+							<li>manage_adesioni; <strong>permette la gestione delle adesioni/firme</strong></li>
+						</ul>
+						<em><strong>Per la gestione delle capabilities si consiglia l\'uso del plugin <a href="https://wordpress.org/plugins/user-role-editor">User Role Editor</a></strong></em> 
+						</p>
+					</li>
+				</ul>
+			</td>				
+		</tr>
 	</table>
 	    <p class="submit">
 	        <input type="submit" name="Circolari_submit_button" value="Salva Modifiche" />
@@ -469,7 +510,8 @@ function circolariG_update_Impostazioni(){
 	    update_option('Circolari_Categoria',$_POST['Categoria'] );
 	    update_option('Circolari_NumPerPag',$_POST['NCircolariPF'] );
 	    update_option('Circolari_GGScadenza',$_POST['GGScadenza'] );
-		update_option('Circolari_NrCircHome',$_POST['NrCircHome'] );     
+		update_option('Circolari_NrCircHome',$_POST['NrCircHome'] );  
+		update_option('Circolari_GestPerm',$_POST['GestPerm'] );     
 		header('Location: '.get_bloginfo('wpurl').'/wp-admin/edit.php?post_type=circolari'); 
 	}
 }
@@ -481,6 +523,9 @@ function circolariG_NuoveColonne($defaults) {
 	    $defaults['destinatari'] = 'Destinatari';
 		$defaults['firme'] = 'Firme';    
 		$defaults['scadenza'] = 'Firmare entro'; 
+		if ((current_user_can( "send_circ@mail" ) or 
+		     current_user_can( "manage_adesioni" )) Or 
+		     get_option('Circolari_GestPerm')=="int")
 	    $defaults['gestionecircolari'] = 'Gestione';  
 	}
    return $defaults;  
@@ -490,14 +535,23 @@ function circolariG_NuoveColonne($defaults) {
 function circolariG_NuoveColonneContenuto($column_name, $post_ID) {  
 	global $wpdb;
  	if ($_GET['post_type']=="circolari"){
+		$firma=get_post_meta($post_ID, "_firma");
+		$sciopero=get_post_meta($post_ID, "_sciopero");
+		if (current_user_can( "manage_adesioni" ) Or get_option('Circolari_GestPerm')=="int")
+			$GestFA=True;
+		else
+			$GestFA=False;
 		if ($column_name == 'gestionecircolari') {  
-			$firma=get_post_meta($post_ID, "_firma");
-			$sciopero=get_post_meta($post_ID, "_sciopero");
 			$Linkfirma="";
-		    if ($firma[0]=="Si" )
+			if (current_user_can( "send_circ@mail" ) Or get_option('Circolari_GestPerm')=="int")
+				$GestEmail=True;
+			else
+				$GestEmail=False;
+		    if ($firma[0]=="Si" And $GestFA)
 				$Linkfirma='<a href="'.admin_url().'edit.php?post_type=circolari&page=circolari&op=Firme&post_id='.$post_ID.'">Firme</a> |';
-			if($sciopero[0]=="Si")
-				$Linkfirma='<a href="'.admin_url().'edit.php?post_type=circolari&page=circolari&op=Adesioni&post_id='.$post_ID.'">Adesioni</a> |';		    	if ( defined( 'ALO_EM_INTERVAL_MIN' ) ){
+			if($sciopero[0]=="Si" And $GestFA)
+				$Linkfirma='<a href="'.admin_url().'edit.php?post_type=circolari&page=circolari&op=Adesioni&post_id='.$post_ID.'">Adesioni</a> |';		    	
+			if ( defined( 'ALO_EM_INTERVAL_MIN' ) And $GestEmail ){
 				$DataInvio = get_post_meta( $post_ID, "_sendNewsLetter", true); 
 	    		if ($DataInvio){
 					$res=$wpdb->get_results("SELECT post_id FROM $wpdb->postmeta Where meta_value=$post_ID And meta_key='_placeholder_easymail_post';");
@@ -512,7 +566,7 @@ function circolariG_NuoveColonneContenuto($column_name, $post_ID) {
 			$anno=get_post_meta($post_ID, "_anno",TRUE);
 			echo $numero.'_'.$anno;
 		 }
-		 if ($column_name == 'firme'){
+		 if ($column_name == 'firme' And (($firma[0]=="Si" And $GestFA) Or ($sciopero[0]=="Si" And $GestFA))){
 		 	$GDes=get_post_meta($post_ID, "_destinatari");
 		 	$GDes=unserialize($GDes[0]);
 		 	$NU=0;
@@ -539,7 +593,34 @@ function circolariG_NuoveColonneContenuto($column_name, $post_ID) {
 	}
 }  
 function circolariG_crea_custom_post_type() {
+	if(get_option('Circolari_GestPerm')=="int"){
+		$cps=array();
+		$cp="post";
+	}	
+	else{
+	 	$cps=array(
+	        'edit_post'		 => "edit_circolare",
+			'read_post'		 => "read_circolare",
+			'delete_post'		 => "delete_circolare",
+			'edit_posts'		 => "edit_circolares",
+			'edit_others_posts'	 => "edit_others_circolares",
+			'publish_posts'		 => "publish_circolares",
+			'read_private_posts'	 => "read_private_circolares",
+	        'delete_posts'           => "delete_circolares",
+	        'delete_private_posts'   => "delete_private_circolares",
+	        'delete_published_posts' => "delete_published_circolares",
+	        'delete_others_posts'    => "delete_others_circolares",
+	        'edit_private_posts'     => "edit_private_circolares",
+	        'edit_published_posts'   => "edit_published_circolares");
+	    $cp="circolare";	
+		$role =& get_role( 'administrator' );
 
+        /* Aggiunta dei ruoli all'Amministratore */
+        if ( !empty( $role ) ) {
+            $role->add_cap( 'manage_adesioni' );
+            $role->add_cap( 'send_circ@mail' );
+        }
+	}
  register_post_type('circolari', array(
   'labels' => array(
    'name' => __( 'Circolari' ),
@@ -560,7 +641,9 @@ function circolariG_crea_custom_post_type() {
    'show_ui' => true,
    'show_in_admin_bar' => true,
    'menu_position' => 5,
-   'capability_type' => 'post',
+   'capability_type' => $cp,
+   'capabilities' => $cps,
+   'map_meta_cap' => true,
    'hierarchical' => false,
    'has_archive' => true,  
    'menu_icon' => plugins_url( 'img/circolare.png', __FILE__ ),
@@ -570,8 +653,9 @@ function circolariG_crea_custom_post_type() {
 // add links/menus to the admin bar
 
 function circolariG_admin_bar_render() {
-	global $wp_admin_bar;
-	$NumCircolari=gcg_GetCircolariDaFirmare("N");
+	global $wp_admin_bar,$NumCircolari;
+	if(!isset($NumCircolari))
+		$NumCircolari=gcg_GetCircolariDaFirmare("N");
 	if ($NumCircolari>0)
 		$VisNumCircolari=' <span style="background-color:red;">&nbsp;'.$NumCircolari.'&nbsp;</span>';
 	else
@@ -628,10 +712,13 @@ function circolariG_salva_dettagli( $post_id ){
 				$DestTutti=get_option('Circolari_Visibilita_Pubblica');
 				$Destinatari[]=(int)$DestTutti;
 			}
-			if ($_POST["scadenza"])
-				update_post_meta( $post_id, '_scadenza', gcg_FormatDataDB($_POST["scadenza"]));
-			else{
-				update_post_meta( $post_id, '_scadenza', gcg_FormatDataDB($_POST["scadenza"],get_option('Circolari_GGScadenza')));
+			if ($_POST["firma"] Or $_POST["sciopero"]){
+				if ($_POST["scadenza"])
+					update_post_meta( $post_id, '_scadenza', gcg_FormatDataDB($_POST["scadenza"]));
+				else
+					update_post_meta( $post_id, '_scadenza', gcg_FormatDataDB($_POST["scadenza"],get_option('Circolari_GGScadenza')));
+			}else{
+				update_post_meta( $post_id, '_scadenza', "");
 			}
 			update_post_meta( $post_id, '_numero', $_POST["numero"]);
 			update_post_meta( $post_id, '_anno', $_POST["anno"]);
